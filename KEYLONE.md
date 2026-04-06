@@ -251,6 +251,25 @@ The vault key is stored in the tab's memory and browser session storage. On brow
 
 ---
 
+## 👑 Admin Panel
+
+> This section is only available to administrators. The **"Administration"** tab appears in the left menu.
+
+### Users tab
+- **Create user** — create an account for a new team member
+- **Reset password** — send a reset link via email or Telegram (recommended)
+- **Admin rights** — grant or revoke administrator privileges
+- **Disable TOTP** — if the user has lost access to their authenticator
+
+### Settings tab
+- **Registration** — open or close self-registration
+- **Password history** — number of recent passwords that cannot be reused (0 = disabled)
+
+### Notifications tab
+Configure the SMTP server for email and Telegram bot for notifications. The *"Test email"* and *"Test Telegram"* buttons let you verify the channels.
+
+---
+
 ## 💡 Tips & Keyboard Shortcuts
 
 ### Keyboard shortcuts
