@@ -1,0 +1,63 @@
+# ── Keylone — Self-hosted (bundled PostgreSQL) ────────────────────────────────
+#
+# Quickstart:
+#   ./setup.sh          — auto-generates .env and starts everything
+#
+# Or manually:
+#   cp .env.example .env  && edit .env
+#   docker compose up -d
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: keylone-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: keylone
+      POSTGRES_USER: keylone
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keylone -d keylone"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    networks:
+      - keylone
+
+  keylone:
+    image: ghcr.io/yukh975/keylone:latest
+    container_name: keylone
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://keylone:${POSTGRES_PASSWORD}@postgres:5432/keylone
+      - JWT_SECRET=${JWT_SECRET}
+      - HOST=0.0.0.0
+      - PORT=3000
+      - RUST_LOG=keylone_server=info
+      - WEBAUTHN_RP_ID=${WEBAUTHN_RP_ID:-localhost}
+      - WEBAUTHN_ORIGIN=${WEBAUTHN_ORIGIN:-http://localhost:3000}
+      - TELEGRAM_PROXY=${TELEGRAM_PROXY:-}
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
+      - net.ipv6.conf.default.disable_ipv6=1
+    networks:
+      - keylone
+
+volumes:
+  postgres_data:
+    name: keylone-postgres-data
+
+networks:
+  keylone:
+    name: keylone-bundled
+    driver: bridge
