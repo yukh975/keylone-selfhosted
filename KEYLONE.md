@@ -178,7 +178,6 @@ Go to **Settings → Data → Export**. Data is exported as JSON. To protect the
 ### Import
 Go to **Settings → Data → Import**. Supported formats:
 - **Keylone JSON** — native format (encrypted or plain)
-- **Bitwarden JSON** — Bitwarden export
 - **CSV** — universal format (username, password, URL, note)
 
 ### Clear vault
