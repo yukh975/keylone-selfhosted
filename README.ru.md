@@ -47,10 +47,23 @@ docker compose down
 Если у вас уже есть экземпляр PostgreSQL:
 
 ```bash
-cp .env.external.example .env
-# Отредактируйте .env — укажите DATABASE_URL, JWT_SECRET, WEBAUTHN_*
-docker compose -f docker-compose.external.yml up -d
+chmod +x setup.external.sh
+./setup.external.sh
 ```
+
+Скрипт сгенерирует `.env` со случайным JWT-секретом и запросит доменное имя.
+**После паузы отредактируйте `.env` и укажите `DATABASE_URL` для подключения к вашему PostgreSQL:**
+
+```env
+DATABASE_URL=postgresql://user:password@host:5432/keylone
+```
+
+Если PostgreSQL запущен на хост-машине (не в Docker):
+```env
+DATABASE_URL=postgresql://user:password@host.docker.internal:5432/keylone
+```
+
+Затем нажмите Enter — скрипт скачает образ и запустит Keylone.
 
 ---
 
