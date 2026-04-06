@@ -31,11 +31,13 @@ main() {
   cd "$SCRIPT_DIR"
 
   echo "▶ Pulling latest image …"
-  $DC pull keylone
+  docker pull ghcr.io/yukh975/keylone:latest
 
   echo ""
-  echo "▶ Restarting …"
-  $DC up -d --no-deps --force-recreate keylone
+  echo "▶ Restarting keylone (postgres untouched) …"
+  docker stop keylone 2>/dev/null || true
+  docker rm keylone   2>/dev/null || true
+  $DC up -d --no-deps keylone
 
   echo ""
   echo "✓ Done. PostgreSQL data is preserved in volume keylone-postgres-data."
