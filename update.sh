@@ -35,7 +35,7 @@ main() {
 
   echo ""
   echo "▶ Restarting …"
-  $DC up -d --remove-orphans --force-recreate keylone
+  $DC up -d --no-deps --force-recreate keylone
 
   echo ""
   echo "✓ Done. PostgreSQL data is preserved in volume keylone-postgres-data."
