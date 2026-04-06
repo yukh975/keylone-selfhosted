@@ -18,21 +18,31 @@ main() {
     exit 1
   fi
 
+  # Detect docker compose command
+  if docker compose version >/dev/null 2>&1; then
+    DC="docker compose"
+  elif command -v docker-compose >/dev/null 2>&1; then
+    DC="docker-compose"
+  else
+    echo "❌ Neither 'docker compose' nor 'docker-compose' found."
+    exit 1
+  fi
+
   cd "$SCRIPT_DIR"
 
   echo "▶ Pulling latest image …"
-  docker compose pull keylone
+  $DC pull keylone
 
   echo ""
   echo "▶ Restarting …"
-  docker compose up -d --remove-orphans --force-recreate keylone
+  $DC up -d --remove-orphans --force-recreate keylone
 
   echo ""
   echo "✓ Done. PostgreSQL data is preserved in volume keylone-postgres-data."
   echo ""
-  docker compose ps
+  $DC ps
   echo ""
-  echo "  Logs: docker compose logs -f"
+  echo "  Logs: $DC logs -f"
 }
 
 main "$@"

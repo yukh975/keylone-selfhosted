@@ -17,10 +17,23 @@ echo "║           Keylone — Setup                ║"
 echo "╚══════════════════════════════════════════╝"
 echo ""
 
+# ── Detect docker compose command (v2 plugin or v1 standalone) ────────────────
+if docker compose version >/dev/null 2>&1; then
+    DC="docker compose"
+elif command -v docker-compose >/dev/null 2>&1; then
+    DC="docker-compose"
+else
+    echo "❌ Neither 'docker compose' nor 'docker-compose' found."
+    echo "   Install Docker with the Compose plugin: https://docs.docker.com/engine/install/"
+    exit 1
+fi
+
 # ── Prerequisites ─────────────────────────────────────────────────────────────
 command -v docker  >/dev/null 2>&1 || { echo "❌ docker is required but not found"; exit 1; }
-docker compose version >/dev/null 2>&1 || { echo "❌ docker compose plugin is required"; exit 1; }
 command -v openssl >/dev/null 2>&1 || { echo "❌ openssl is required but not found"; exit 1; }
+
+echo "✓ Using: $DC"
+echo ""
 
 # ── Generate .env ─────────────────────────────────────────────────────────────
 if [ -f "$ENV_FILE" ]; then
@@ -63,11 +76,11 @@ fi
 # ── Pull image and start ──────────────────────────────────────────────────────
 echo "Pulling Keylone image …"
 cd "$SCRIPT_DIR"
-docker compose pull keylone
+$DC pull keylone
 
 echo ""
 echo "Starting Keylone + PostgreSQL …"
-docker compose up -d
+$DC up -d
 
 echo ""
 echo "╔══════════════════════════════════════════╗"
@@ -76,7 +89,7 @@ echo "╚═══════════════════════�
 echo ""
 echo "  URL:  http://localhost:3000"
 echo ""
-echo "  Logs: docker compose logs -f"
-echo "  Stop: docker compose down"
+echo "  Logs: $DC logs -f"
+echo "  Stop: $DC down"
 echo ""
 echo "  ⚠️  Back up your .env file — it contains your database credentials."
