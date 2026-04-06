@@ -30,6 +30,10 @@ main() {
 
   cd "$SCRIPT_DIR"
 
+  echo "▶ Updating scripts …"
+  git pull
+
+  echo ""
   echo "▶ Pulling latest image …"
   docker pull ghcr.io/yukh975/keylone:latest
 
