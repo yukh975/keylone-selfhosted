@@ -54,6 +54,28 @@ docker compose -f docker-compose.external.yml up -d
 
 ---
 
+## Caddy + HTTPS (recommended)
+
+Caddy obtains and renews Let's Encrypt certificates automatically.
+
+Install Caddy: https://caddyserver.com/docs/install
+
+Add to your `/etc/caddy/Caddyfile`:
+
+```caddy
+vault.example.com {
+    reverse_proxy localhost:3000
+}
+```
+
+```bash
+systemctl reload caddy
+```
+
+That's it — no certificate commands needed. Caddy handles HTTPS and HTTP→HTTPS redirect automatically.
+
+---
+
 ## Nginx + HTTPS (Let's Encrypt)
 
 Example nginx config (place in `/etc/nginx/sites-available/keylone`):
