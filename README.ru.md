@@ -44,45 +44,59 @@ docker compose down
 
 ### Внешний PostgreSQL
 
-Если у вас уже есть экземпляр PostgreSQL:
+Если у вас уже есть экземпляр PostgreSQL на хосте или удалённом сервере:
 
 ```bash
 chmod +x setup.external.sh
 ./setup.external.sh
 ```
 
-Скрипт сгенерирует `.env` со случайным JWT-секретом и запросит доменное имя.
-**После паузы отредактируйте `.env` и укажите `DATABASE_URL` для подключения к вашему PostgreSQL:**
+Скрипт запросит домен, данные для подключения к PostgreSQL и параметры Docker-сети, затем сгенерирует `.env` и запустит Keylone.
+
+#### Подсеть Docker-сети
+
+Keylone использует выделенную Docker bridge-сеть с фиксированной адресацией — чтобы контейнер всегда получал одни и те же IP-адреса. По умолчанию используется подсеть `192.168.222.0/30`. Если она конфликтует с существующей сетью в вашем окружении, измените `DOCKER_SUBNET` и `DOCKER_GATEWAY` в `.env` до запуска:
 
 ```env
-DATABASE_URL=postgresql://user:password@host:5432/keylone
+DOCKER_SUBNET=192.168.222.0/30
+DOCKER_GATEWAY=192.168.222.1
 ```
 
-Если PostgreSQL запущен на хост-машине (не в Docker):
-```env
-DATABASE_URL=postgresql://user:password@host.docker.internal:5432/keylone
+#### PostgreSQL: разрешение подключений из Docker
+
+Когда Keylone работает в контейнере, а PostgreSQL — на хосте, подключения приходят с адресов Docker bridge-сети. Необходимо разрешить их в `pg_hba.conf` (обычно `/etc/postgresql/*/main/pg_hba.conf` или `/var/lib/pgsql/data/pg_hba.conf`):
+
+```
+host    keylone    keylone    192.168.222.0/30    md5
 ```
 
-Затем нажмите Enter — скрипт скачает образ и запустит Keylone.
-
-#### Доступ к PostgreSQL в режиме внешней БД
-
-Keylone работает в Docker-контейнере, и подключения к PostgreSQL на хосте приходят с адресов Docker bridge-сети (обычно `172.17.0.0/16`). Необходимо разрешить это в двух местах:
-
-**`pg_hba.conf`** — добавьте строку для разрешения подключений из Docker:
-```
-host    keylone    keylone    172.17.0.0/16    md5
-```
-
-**iptables** — если на сервере строгий firewall (политика INPUT DROP):
+После изменения перезагрузите PostgreSQL:
 ```bash
-iptables -I INPUT -s 172.17.0.0/16 -p tcp --dport 5432 -j ACCEPT
-iptables-save > /etc/sysconfig/iptables   # сохранить после перезагрузки
+systemctl reload postgresql
 ```
 
-> **Примечание:** Точная подсеть Docker может отличаться. Проверьте командой:
-> `docker inspect <имя-контейнера> --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}'`
-> и скорректируйте подсеть соответственно.
+Если вы изменили `DOCKER_SUBNET` — используйте свою подсеть вместо `192.168.222.0/30`.
+
+#### Firewall
+
+Если на сервере строгий firewall (политика iptables INPUT DROP), необходимо явно разрешить порт 5432 с адресов Docker-сети:
+
+```bash
+iptables -I INPUT -s 192.168.222.0/30 -p tcp --dport 5432 -j ACCEPT
+iptables-save > /etc/sysconfig/iptables    # сохранить после перезагрузки (RHEL/CentOS)
+# или:
+iptables-save > /etc/iptables/rules.v4     # сохранить после перезагрузки (Debian/Ubuntu)
+```
+
+Если используете `firewalld`:
+```bash
+firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="192.168.222.0/30" port port="5432" protocol="tcp" accept'
+firewall-cmd --reload
+```
+
+> **Примечание:** Если вы изменили `DOCKER_SUBNET`, замените `192.168.222.0/30` на свою подсеть во всех командах выше.
+
+> **Встроенный PostgreSQL** не требует никаких из этих настроек — оба контейнера находятся в одной Docker-сети и общаются напрямую.
 
 ---
 
