@@ -65,6 +65,25 @@ DATABASE_URL=postgresql://user:password@host.docker.internal:5432/keylone
 
 Затем нажмите Enter — скрипт скачает образ и запустит Keylone.
 
+#### Доступ к PostgreSQL в режиме внешней БД
+
+Keylone работает в Docker-контейнере, и подключения к PostgreSQL на хосте приходят с адресов Docker bridge-сети (обычно `172.17.0.0/16`). Необходимо разрешить это в двух местах:
+
+**`pg_hba.conf`** — добавьте строку для разрешения подключений из Docker:
+```
+host    keylone    keylone    172.17.0.0/16    md5
+```
+
+**iptables** — если на сервере строгий firewall (политика INPUT DROP):
+```bash
+iptables -I INPUT -s 172.17.0.0/16 -p tcp --dport 5432 -j ACCEPT
+iptables-save > /etc/sysconfig/iptables   # сохранить после перезагрузки
+```
+
+> **Примечание:** Точная подсеть Docker может отличаться. Проверьте командой:
+> `docker inspect <имя-контейнера> --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}'`
+> и скорректируйте подсеть соответственно.
+
 ---
 
 ## Caddy + HTTPS (рекомендуется)
